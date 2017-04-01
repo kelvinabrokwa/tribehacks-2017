@@ -87,6 +87,8 @@ function discoverCharacteristics(service) {
 
 function setDataListener(service, characteristic) {
   characteristic.on('data', (data, isNotification) => {
+    console.log('new data\n\tservice: ' + service.uuid + '\n\tcharacteristic: ' +
+      characteristic.uuid + '\n\tdata: ' + data.readInt32LE(0));
     bleData[service.uuid][characteristic.uuid] = data.readInt32LE(0);
   });
 }
@@ -102,23 +104,27 @@ app.get('/data', (req, res) => {
   res.json(bleData);
 });
 
-app.post('/devices/lock/lock', (req, res) => {
-  var buf = Buffer.allocUnsafe(8);
-  buf.writeInt32LE(1);
+app.post('/devices/lock/:lock', (req, res) => {
+  var val = req.params.lock === 'lock' ? 1 : 0;
+  var buf = Buffer.allocUnsafe(4);
+  buf.writeInt32LE(val, 0);
+  if (!(serviceNames['lockOpenClose'] in bleCharacteristics)) {
+    console.log('attempt to accessed unconnected lock');
+    return res.send('device is not connected');
+  }
+  if (!(characteristicNames['lockOpenClose'] in bleCharacteristics[serviceNames['lockOpenClose']])) {
+    console.log('attempt to accessed unconnected lock');
+    return res.send('device is not connected');
+  }
   var characteristic = bleCharacteristics[serviceNames['lockOpenClose']][characteristicNames['lockOpenClose']];
   characteristic.once('write', () => {
-    console.log('writing 1 to\n\tservice:' + serviceNames['lockOpenClose'] +
-      '\n\tcharacteristic: ' + characteristicNames['lockOpenClose']);
+    console.log('writing\n\tservice:' + serviceNames['lockOpenClose'] +
+      '\n\tcharacteristic: ' + characteristicNames['lockOpenClose'] + '\n\tdata: ' + val);
   });
-  characteristic.read((err, data) => {
-    if (err) {
-      return console.log(err);
-    }
-
-  });
-  characteristic.write(buf, false, err => {
+  characteristic.write(buf, true, err => {
     if (err) {
       console.log(err);
+      res.send('error');
     } else {
       res.send('ok');
     }
