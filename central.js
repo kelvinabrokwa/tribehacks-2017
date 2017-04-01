@@ -30,9 +30,13 @@ noble.on('discover', function onDiscover(peripheral) {
           }
 
           for (var j = 0; j < characteristics.length; j++) {
-            var data = new Buffer(1);
-            data.writeUInt8(0, 0);
-            characteristics[j].write(data);
+
+            //var data = new Buffer(1);
+            //data.writeUInt8(1, 0);
+            //characteristics[j].write(data);
+            characteristics[j].on('data', function onData(data, isNotification) {
+              console.log(data);
+            });
           }
 
         });
