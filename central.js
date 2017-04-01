@@ -3,20 +3,48 @@
  */
 
 var noble = require('noble');
+var express = require('express');
+var cors = require('cors');
 
-noble.on('stateChange', function onStateChange(state) {
-  noble.startScanning();
+var app = express();
+app.use(cors());
+
+//
+// BLE stuff
+//
+var serviceUUIDs = {
+  temperature: '19B10000-E8F2-537E-4F6C-D104768A1214'
+};
+
+var characteristicUUID;
+
+var bleServices = {};
+
+noble.on('stateChange', state => {
+  if (state === 'poweredOn') {
+    noble.startScanning();
+  }
 });
 
-noble.on('discover', function onDiscover(peripheral) {
-  noble.stopScanning();
+noble.on('scanStart', function() {
+  console.log('starting peripheral scan');
+});
 
-  peripheral.on('disconnect', function onDisconnect() {
+noble.on('discover', peripheral => {
+  console.log('discovered peripheral');
+
+  peripheral.on('disconnect', () => {
     console.log('disconnected');
   });
 
-  peripheral.connect(function connect() {
-    peripheral.discoverServices([], function(err, services) {
+  peripheral.connect(err => {
+    if (err) {
+      console.log(err);
+    }
+
+    console.log('connected to peripheral');
+
+    peripheral.discoverServices([], (err, services) => {
       if (err) {
         console.log(err);
       }
@@ -24,23 +52,48 @@ noble.on('discover', function onDiscover(peripheral) {
       console.log('discovered ' + services.length + ' services');
 
       for (var i = 0; i < services.length; i++) {
-        services[i].discoverCharacteristics([], function(err, characteristics) {
-          if (err) {
-            console.log(err);
-          }
 
-          console.log('discovered ' + characteristics.length + ' characteristics');
+        bleServices[services[i].uuid] = {};
 
-          for (var j = 0; j < characteristics.length; j++) {
-            characteristics[j].on('data', function onData(data, isNotification) {
-              console.log(data.readInt32LE(0));
-            });
-            characteristics[j].subscribe();
-          }
-
-        });
+        discoverCharacteristics(services[i]);
       }
     });
   });
+});
+
+function discoverCharacteristics(service) {
+  service.discoverCharacteristics([], (err, characteristics) => {
+    if (err) {
+      console.log(err);
+    }
+
+    console.log('discovered ' + characteristics.length + ' characteristics');
+
+    for (var j = 0; j < characteristics.length; j++) {
+      setDataListener(service, characteristics[j]);
+      characteristics[j].subscribe();
+    }
+  });
+}
+
+function setDataListener(service, characteristic) {
+  characteristic.on('data', (data, isNotification) => {
+    bleServices[service.uuid][characteristic.uuid] = data.readInt32LE(0);
+  });
+}
+
+//
+// server stuff
+//
+app.get('/', (req, res) => {
+  res.send(';)');
+});
+
+app.get('/data', (req, res) => {
+  res.json(bleServices);
+});
+
+app.listen(8080, () => {
+  console.log('http server listening on port :80');
 });
 
