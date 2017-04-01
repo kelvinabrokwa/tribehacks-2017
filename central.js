@@ -21,7 +21,7 @@ noble.on('discover', function onDiscover(peripheral) {
         console.log(err);
       }
 
-      console.log('discovered service');
+      console.log('discovered ' + services.length + ' services');
 
       for (var i = 0; i < services.length; i++) {
         services[i].discoverCharacteristics([], function(err, characteristics) {
@@ -29,14 +29,13 @@ noble.on('discover', function onDiscover(peripheral) {
             console.log(err);
           }
 
-          for (var j = 0; j < characteristics.length; j++) {
+          console.log('discovered ' + characteristics.length + ' characteristics');
 
-            //var data = new Buffer(1);
-            //data.writeUInt8(1, 0);
-            //characteristics[j].write(data);
+          for (var j = 0; j < characteristics.length; j++) {
             characteristics[j].on('data', function onData(data, isNotification) {
-              console.log(data);
+              console.log(data.readInt32LE(0));
             });
+            characteristics[j].subscribe();
           }
 
         });
