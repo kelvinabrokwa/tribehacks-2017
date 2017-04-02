@@ -3,13 +3,29 @@
  */
 
 var noble = require('noble');
-var express = require('express');
 var cors = require('cors');
 var morgan = require('morgan');
-
+var express = require('express');
 var app = express();
+
 app.use(cors());
 app.use(morgan('combined'));
+
+var WebSocket = require('ws');
+var server = require('http').createServer(app);
+var wss = new WebSocket.Server({ port: 8081 });
+
+wss.on('connection', ws => {
+  console.log('new connection');
+});
+
+function broadcast() {
+  wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(bleData));
+    }
+  });
+}
 
 //
 // BLE stuff
@@ -90,6 +106,7 @@ function setDataListener(service, characteristic) {
     console.log('new data\n\tservice: ' + service.uuid + '\n\tcharacteristic: ' +
       characteristic.uuid + '\n\tdata: ' + data.readInt32LE(0));
     bleData[service.uuid][characteristic.uuid] = data.readInt32LE(0);
+    broadcast(); // send data to all websocket clients
   });
 }
 
