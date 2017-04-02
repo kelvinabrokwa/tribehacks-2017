@@ -26,7 +26,7 @@ UUID: 7f0a4c78-173d-4944-8af1-d836680a8bf1
 
 #### CHARACTERISTICS
 
-##### Open/Close
+##### Status
 
 ```
 UUID: 33b69844-9c9d-4493-a102-9ca17db2d5b7
@@ -40,7 +40,7 @@ UUID: 9d0c027c-9ed1-48e9-84f3-f59dd2a204b2
 
 #### CHARACTERISTICS
 
-#### Open/Close
+#### Status
 
 ```
 UUID: 33b69844-9c9d-4493-a102-9ca17db2d5b7
