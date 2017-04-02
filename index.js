@@ -4,7 +4,6 @@
 
 import ReactDOM from 'react-dom';
 import React from 'react';
-import { Sparklines } from 'react-sparklines';
 import { characteristicNames, serviceNames } from './names';
 
 var noiseThreshold = 500;
@@ -66,15 +65,18 @@ class App extends React.Component {
     var { temp, light, lock, noise, cookieJar } = this.state;
     return (<div className='container full-height full-width white big center'>
       <div className='widget half-width half-height bg-gray' onClick={this.lock.bind(this)}>
-        door
-        <div>
+        <div className='in'>
+          door
           <div>
-            {lock ? <i className='fa fa-lock'></i> : <i className='fa fa-unlock'></i>}
+            <div>
+              {lock ? <i className='fa fa-lock'></i> : <i className='fa fa-unlock'></i>}
+            </div>
+            {lock ? 'locked' : 'unlocked'}
           </div>
-          {lock ? 'locked' : 'unlocked'}
         </div>
       </div>
       <div className='widget half-width half-height bg-green'>
+        <div className='in'>
         cookie jar
         <div>
           <i className='fa fa-user-secret'></i>
@@ -82,8 +84,10 @@ class App extends React.Component {
         <div>
           {cookieJar ? 'compromised' : 'secured'}
         </div>
+        </div>
       </div>
       <div className='widget third-width half-height bg-purple'>
+        <div className='in'>
         temp
         <div>
           <i className='fa fa-thermometer-half'></i>
@@ -91,12 +95,10 @@ class App extends React.Component {
         <div>
           {temp}
         </div>
-        <div>
-          <Sparklines data={[5, 10, 5, 20, 8, 15]} limit={5} width={100} height={20} margin={5}>
-          </Sparklines>
         </div>
       </div>
       <div className='widget third-width half-height bg-orange'>
+        <div className='in'>
         light
         <div>
           <i className='fa fa-sun-o'></i>
@@ -104,14 +106,17 @@ class App extends React.Component {
         <div>
           {light}
         </div>
+        </div>
       </div>
       <div className='widget third-width half-height bg-blue'>
+        <div className='in'>
         noise
         <div>
           {noise > noiseThreshold ? <i className='fa fa-volume-up'></i>
  : <i className='fa fa-volume-down'></i>}
         </div>
         {1023 - noise}
+      </div>
       </div>
     </div>);
   }
