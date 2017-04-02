@@ -1,5 +1,5 @@
 /**
- *
+ * Bluetooth and HTTP server
  */
 
 var noble = require('noble');
