@@ -56,7 +56,6 @@ void setup() {
   pinMode(rotaryInput, INPUT);
   myStepper.setSpeed(motorSpeed);
   Serial.begin(9600);
-  while (!Serial) ;
 }
 
 void unlock() {
