@@ -7,6 +7,7 @@ var cors = require('cors');
 var morgan = require('morgan');
 var express = require('express');
 var app = express();
+var names = require('./names');
 
 app.use(cors());
 app.use(morgan('combined'));
@@ -34,13 +35,8 @@ var bleData = {};
 
 var bleCharacteristics = {};
 
-var characteristicNames = {
-  lockOpenClose: '33b698449c9d4493a1029ca17db2d5b7'
-};
-
-var serviceNames = {
-  lockOpenClose: '9d0c027c9ed148e984f3f59dd2a204b2'
-};
+var characteristicNames = names.characteristicNames;
+var serviceNames = names.serviceNames;
 
 noble.on('stateChange', state => {
   if (state === 'poweredOn') {
@@ -74,6 +70,9 @@ noble.on('discover', peripheral => {
       console.log('discovered ' + services.length + ' services');
 
       for (var i = 0; i < services.length; i++) {
+        if (Object.keys(serviceNames).map(k => serviceNames[k]).indexOf(services[i].uuid) === -1) {
+          continue;
+        }
         console.log('new service: ' + services[i].uuid);
         bleData[services[i].uuid] = {};
         bleCharacteristics[services[i].uuid] = {};
