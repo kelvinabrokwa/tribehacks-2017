@@ -6,6 +6,8 @@ import ReactDOM from 'react-dom';
 import React from 'react';
 import { characteristicNames, serviceNames } from './names';
 
+var noiseThreshold = 500;
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -53,35 +55,49 @@ class App extends React.Component {
   render() {
     var { temp, light, lock, noise, cookieJar } = this.state;
     return (<div className='container full-height full-width white big center'>
-      <div className='widget half-width half-height bg-purple pad2'>
+      <div className='widget half-width half-height bg-gray'>
+        door
+        <div className='pt2'>
+          <div>
+            {lock ? <i className='fa fa-lock'></i> : <i className='fa fa-unlock'></i>}
+          </div>
+          {lock ? 'locked' : 'unlocked'}
+        </div>
+      </div>
+      <div className='widget half-width half-height bg-green'>
+        cookie jar
+        <div>
+          <i className='fa fa-user-secret'></i>
+        </div>
+        <div>
+          {cookieJar ? 'closed' : 'open'}
+        </div>
+      </div>
+      <div className='widget third-width half-height bg-purple'>
         temp
+        <div>
+          <i className='fa fa-thermometer-half'></i>
+        </div>
         <div>
           {temp}
         </div>
       </div>
-      <div className='widget half-width half-height bg-orange pad2'>
+      <div className='widget third-width half-height bg-orange'>
         light
+        <div>
+          <i className='fa fa-sun-o'></i>
+        </div>
         <div>
           {light}
         </div>
       </div>
-      <div className='widget third-width half-height bg-gray pad2'>
-        lock
-        <div>
-          {lock ? 'locked' : 'unlocked'}
-        </div>
-      </div>
-      <div className='widget third-width half-height bg-green pad2'>
+      <div className='widget third-width half-height bg-blue'>
         noise
         <div>
-          {noise}
+          {noise > noiseThreshold ? <i className='fa fa-volume-up'></i>
+ : <i className='fa fa-volume-down'></i>}
         </div>
-      </div>
-      <div className='widget third-width half-height bg-blue pad2'>
-        cookie jar
-        <div>
-          {cookieJar ? 'closed' : 'open'}
-        </div>
+        {noise}
       </div>
     </div>);
   }

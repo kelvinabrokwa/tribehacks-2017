@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 <head>
-  <meta charset="UTF-8">
+  <meta charset='UTF-8'>
   <title>Arduino IoT</title>
   <style>
     html, body, div, span, applet, object, iframe,
@@ -33,6 +33,7 @@
     .widget {
       position: relative;
       float: left;
+      padding-top: 30px;
     }
     .full-height { height: 100%; }
     .full-width { width: 100%; }
@@ -48,13 +49,12 @@
     .white { color: #fff; }
     .big { font-size: 80px; }
     .center { text-align: center; }
-    .pad2 {}
   </style>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js'></script>
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'>
 </head>
 <body>
   <div id='app' class='full-height'></div>
-  <!--script src='bundle.js'></script-->
-  <script src='http://192.168.1.15:9966/bundle.js'></script>
+  <script src='bundle.js'></script>
+  <!--script src='http://192.168.1.15:9966/bundle.js'></script-->
 </body>
 </html>
