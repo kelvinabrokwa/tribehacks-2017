@@ -1,5 +1,7 @@
 # Tribe Hacks 2017 Project
 
+![](arduiot.png)
+
 # BLE Information
 
 ## SERVICES
