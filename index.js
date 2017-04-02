@@ -111,7 +111,7 @@ class App extends React.Component {
           {noise > noiseThreshold ? <i className='fa fa-volume-up'></i>
  : <i className='fa fa-volume-down'></i>}
         </div>
-        {noise}
+        {1023 - noise}
       </div>
     </div>);
   }
