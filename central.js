@@ -17,7 +17,7 @@ var server = require('http').createServer(app);
 var wss = new WebSocket.Server({ port: 8081 });
 
 wss.on('connection', ws => {
-  console.log('new connection');
+  ws.send(JSON.stringify(bleData));
 });
 
 function broadcast() {
@@ -38,9 +38,11 @@ var bleCharacteristics = {};
 var characteristicNames = names.characteristicNames;
 var serviceNames = names.serviceNames;
 
+var peripherals = [];
+
 noble.on('stateChange', state => {
   if (state === 'poweredOn') {
-    noble.startScanning();
+    noble.startScanning(['73d288541c4c4f599c8506b3fd542b9d'], false);
   }
 });
 
@@ -55,32 +57,43 @@ noble.on('discover', peripheral => {
     console.log('disconnected');
   });
 
-  peripheral.connect(err => {
-    if (err) {
-      console.log(err);
-    }
+  peripherals.push(peripheral);
+  connectToPeripherals();
+});
 
-    console.log('connected to peripheral');
-
-    peripheral.discoverServices([], (err, services) => {
+function connectToPeripherals() {
+  if (peripherals.length < 3) {
+    return;
+  }
+  noble.stopScanning();
+  peripherals.forEach(peripheral => {
+    peripheral.connect(err => {
       if (err) {
         console.log(err);
       }
 
-      console.log('discovered ' + services.length + ' services');
+      console.log('connected to peripheral');
 
-      for (var i = 0; i < services.length; i++) {
-        if (Object.keys(serviceNames).map(k => serviceNames[k]).indexOf(services[i].uuid) === -1) {
-          continue;
+      peripheral.discoverServices([], (err, services) => {
+        if (err) {
+          console.log(err);
         }
-        console.log('new service: ' + services[i].uuid);
-        bleData[services[i].uuid] = {};
-        bleCharacteristics[services[i].uuid] = {};
-        discoverCharacteristics(services[i]);
-      }
+
+        console.log('discovered ' + services.length + ' services');
+
+        for (var i = 0; i < services.length; i++) {
+          if (Object.keys(serviceNames).map(k => serviceNames[k]).indexOf(services[i].uuid) === -1) {
+            continue;
+          }
+          console.log('new service: ' + services[i].uuid);
+          bleData[services[i].uuid] = {};
+          bleCharacteristics[services[i].uuid] = {};
+          discoverCharacteristics(services[i]);
+        }
+      });
     });
   });
-});
+}
 
 function discoverCharacteristics(service) {
   service.discoverCharacteristics([], (err, characteristics) => {
@@ -104,7 +117,28 @@ function setDataListener(service, characteristic) {
   characteristic.on('data', (data, isNotification) => {
     console.log('new data\n\tservice: ' + service.uuid + '\n\tcharacteristic: ' +
       characteristic.uuid + '\n\tdata: ' + data.readInt32LE(0));
-    bleData[service.uuid][characteristic.uuid] = data.readInt32LE(0);
+    if (service.uuid === serviceNames.lockOpenClose) {
+      bleData[service.uuid][characteristic.uuid] = data.readInt32LE(0) === 1;
+    }  else if (service.uuid === serviceNames.cookieJar) {
+      bleData[service.uuid][characteristic.uuid] = data.readInt32LE(0) === 1;
+    } else {
+      bleData[service.uuid][characteristic.uuid] = data.readInt32LE(0);
+    }
+    broadcast(); // send data to all websocket clients
+  });
+  characteristic.read((err, data) => {
+    if (err) {
+      return console.log(err);
+    }
+    console.log('new data\n\tservice: ' + service.uuid + '\n\tcharacteristic: ' +
+      characteristic.uuid + '\n\tdata: ' + data.readInt32LE(0));
+    if (service.uuid === serviceNames.lockOpenClose) {
+      bleData[service.uuid][characteristic.uuid] = data.readInt32LE(0) === 1;
+    }  else if (service.uuid === serviceNames.cookieJar) {
+      bleData[service.uuid][characteristic.uuid] = data.readInt32LE(0) === 1;
+    } else {
+      bleData[service.uuid][characteristic.uuid] = data.readInt32LE(0);
+    }
     broadcast(); // send data to all websocket clients
   });
 }
@@ -124,24 +158,26 @@ app.post('/devices/lock/:lock', (req, res) => {
   var val = req.params.lock === 'lock' ? 1 : 0;
   var buf = Buffer.allocUnsafe(4);
   buf.writeInt32LE(val, 0);
-  if (!(serviceNames['lockOpenClose'] in bleCharacteristics)) {
+  if (!(serviceNames.lockOpenClose in bleCharacteristics)) {
     console.log('attempt to accessed unconnected lock');
     return res.send('device is not connected');
   }
-  if (!(characteristicNames['lockOpenClose'] in bleCharacteristics[serviceNames['lockOpenClose']])) {
+  if (!(characteristicNames.lockOpenClose in bleCharacteristics[serviceNames.lockOpenClose])) {
     console.log('attempt to accessed unconnected lock');
     return res.send('device is not connected');
   }
-  var characteristic = bleCharacteristics[serviceNames['lockOpenClose']][characteristicNames['lockOpenClose']];
+  var characteristic = bleCharacteristics[serviceNames.lockOpenClose][characteristicNames.lockOpenClose];
   characteristic.once('write', () => {
-    console.log('writing\n\tservice:' + serviceNames['lockOpenClose'] +
-      '\n\tcharacteristic: ' + characteristicNames['lockOpenClose'] + '\n\tdata: ' + val);
+    console.log('writing\n\tservice:' + serviceNames.lockOpenClose +
+      '\n\tcharacteristic: ' + characteristicNames.lockOpenClose + '\n\tdata: ' + val);
   });
   characteristic.write(buf, true, err => {
     if (err) {
       console.log(err);
       res.send('error');
     } else {
+      bleData[serviceNames.lockOpenClose][characteristicNames.lockOpenClose] = val === 1;
+      broadcast();
       res.send('ok');
     }
   });

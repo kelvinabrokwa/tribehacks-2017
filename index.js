@@ -4,6 +4,7 @@
 
 import ReactDOM from 'react-dom';
 import React from 'react';
+import { Sparklines } from 'react-sparklines';
 import { characteristicNames, serviceNames } from './names';
 
 var noiseThreshold = 500;
@@ -38,12 +39,12 @@ class App extends React.Component {
         }
         if (serviceNames.lockOpenClose in data) {
           if (characteristicNames.lockOpenClose in data[serviceNames.lockOpenClose]) {
-            lock = data[serviceNames.lockOpenClose][serviceNames.lockOpenClose];
+            lock = data[serviceNames.lockOpenClose][characteristicNames.lockOpenClose];
           }
         }
         if (serviceNames.cookieJar in data) {
           if (characteristicNames.cookieJar in data[serviceNames.cookieJar]) {
-            cookieJar = data[serviceNames.cookieJar][serviceNames.cookieJar];
+            cookieJar = data[serviceNames.cookieJar][characteristicNames.cookieJar];
           }
         }
         this.setState({ temp, light, lock, noise, cookieJar });
@@ -52,12 +53,21 @@ class App extends React.Component {
       }
     });
   }
+  lock() {
+    fetch(`http://localhost:8080/devices/lock/${this.state.lock ? 'unlock' : 'lock'}`, { method: 'POST' })
+      .then(res => {
+        console.log(res);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
   render() {
     var { temp, light, lock, noise, cookieJar } = this.state;
     return (<div className='container full-height full-width white big center'>
-      <div className='widget half-width half-height bg-gray'>
+      <div className='widget half-width half-height bg-gray' onClick={this.lock.bind(this)}>
         door
-        <div className='pt2'>
+        <div>
           <div>
             {lock ? <i className='fa fa-lock'></i> : <i className='fa fa-unlock'></i>}
           </div>
@@ -70,7 +80,7 @@ class App extends React.Component {
           <i className='fa fa-user-secret'></i>
         </div>
         <div>
-          {cookieJar ? 'closed' : 'open'}
+          {cookieJar ? 'compromised' : 'secured'}
         </div>
       </div>
       <div className='widget third-width half-height bg-purple'>
@@ -80,6 +90,10 @@ class App extends React.Component {
         </div>
         <div>
           {temp}
+        </div>
+        <div>
+          <Sparklines data={[5, 10, 5, 20, 8, 15]} limit={5} width={100} height={20} margin={5}>
+          </Sparklines>
         </div>
       </div>
       <div className='widget third-width half-height bg-orange'>

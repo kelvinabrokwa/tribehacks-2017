@@ -9,10 +9,8 @@ Stepper myStepper(stepsPerRevolution, 8, 9, 10, 11);
 
 //ROTARY SENSOR
 const int rotaryInput = A0;
-const int unlocked = 9;
-const int locked = 1023;
-//all the way left = 9
-//all the way right = 1023
+const int unlocked = 870;
+const int locked = 320;
 int rotaryValue;
 
 //BLE
@@ -63,20 +61,20 @@ void setup() {
 
 void unlock() {
   rotaryValue = analogRead(rotaryInput);
-  while(rotaryValue > unlocked) {
+  while(rotaryValue < unlocked) {
     Serial.print(rotaryValue);
     Serial.print("\n");
-    myStepper.step(stepsPerStep);
+    myStepper.step(-stepsPerStep);
     rotaryValue = analogRead(rotaryInput);
   }
 }
 
 void lock() {
   rotaryValue = analogRead(rotaryInput);
-  while(rotaryValue < locked) {
+  while(rotaryValue > locked) {
     Serial.print(rotaryValue);
     Serial.print("\n");
-    myStepper.step(-stepsPerStep);
+    myStepper.step(stepsPerStep);
     rotaryValue = analogRead(rotaryInput);
   }
 }
@@ -88,14 +86,13 @@ void updateState(int newState) {
 void loop() {
   blePeripheral.poll();
   rotaryValue = analogRead(rotaryInput);
-  //Serial.print(rotaryValue);
-  //Serial.print("\n");
+  Serial.println(rotaryValue);
   //door manually unlocked
-  if ((int)doorLock_Status_Characteristic.value() == 1 && rotaryValue <= unlocked) {
+  if ((int)doorLock_Status_Characteristic.value() == 1 && rotaryValue >= unlocked) {
     Serial.print("door manually unlocked\n");
     updateState(0);
   //door manually locked
-  } else if ((int)doorLock_Status_Characteristic.value() == 0 && rotaryValue >= locked) {
+  } else if ((int)doorLock_Status_Characteristic.value() == 0 && rotaryValue <= locked) {
     Serial.print("door manually locked\n");
     updateState(1);
   }
