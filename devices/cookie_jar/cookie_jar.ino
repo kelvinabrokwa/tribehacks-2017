@@ -53,7 +53,7 @@ void setup() {
 
 void checkJar() {
   touchValue = digitalRead(touchInput);
-  if (touchValue == 0) {
+  if (touchValue == 1) {
     if (!buzzerOn) {
       cookieJar_Status_Characteristic.setValue(touchValue);
       buzzerOn = 1;
